@@ -23,7 +23,7 @@ These tools are:
   we think going this way now might quite save you some nerves further down the line. 
 - [Git CLI][GitCLI]. We are pretty confident you already have it.
 - [eksctl CLI][eksctlCLI], a convenience command 
-  line tool to create EKS clusters, built by Weaveworks.
+  line tool to create EKS clusters, built by Weaveworks. **Ensure you have version 0.1.31 or higher!** 
 - An AWS account with the policy "AdministratorAccess" and its access and 
   secret key
 - The [AWS CLI][awsCLI], an Amazon tool to work with 
@@ -96,7 +96,6 @@ export GITHUB_TOKEN="<enter token here>"
 export GITHUB_USER="<enter user here>"
 export CODEBUILD_DOCKERIMAGE="aws/codebuild/java:openjdk-8"
 export OWNER="<your name here>"
-export SSH_PUBLIC_KEY_FILE="<path-to-ssh-public-key>"
 
 # ... more automated stuff ...
 ```
@@ -105,7 +104,6 @@ You should edit this file and fill in your data, at least the following:
 - You should determine a CLUSTER_NAME that is specific for you. This cluster name is unique per AWS account.
 - Enter the GITHUB_TOKEN you just created and also specify the GITHUB_USER for which this token was created.
 - Specify your name as OWNER. This will go into an "owner" tag on the created resources for auditing purposes.
-- Specify a path to your SSH public key file under SSH_PUBLIC_KEY_FILE if available.
 
 The config.sh file will not be checked in with the Git Repo to keep information like your Github token private.
 
@@ -130,14 +128,11 @@ nodeGroups:
   ami: ami-0a9006fb385703b54
   instanceType: m5.large
   desiredCapacity: 3
-  allowSSH: true
-  sshPublicKeyPath: ${SSH_PUBLIC_KEY_FILE}
+  ssh:
+    allow: true
 ```
 
 Most of it is configured through aforementioned `config.sh` but you may add your own settings here.
-
-If you chose to not specify the SSH_PUBLIC_KEY_FILE on the config.sh then you should remove the line "sshPublicKeyPath"
-here.
 
 ### Prepare parameters file for Cloud Formation
 

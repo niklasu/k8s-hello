@@ -1,4 +1,4 @@
-apiVersion: eksctl.io/v1alpha4
+apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
@@ -12,5 +12,5 @@ nodeGroups:
   ami: ami-0a9006fb385703b54
   instanceType: m5.large
   desiredCapacity: 3
-  allowSSH: true
-  sshPublicKeyPath: ${SSH_PUBLIC_KEY_FILE}
+  ssh:
+    allow: true
