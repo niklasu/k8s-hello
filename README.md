@@ -3,7 +3,7 @@
 A project to:
 
 - Deploy a Kubernetes Cluster in AWS via eksctl. The cluster will have 3 
-  worker nodes of AWS instance type "t2.micro"
+  worker nodes of AWS instance type "m5.large"
 - Build a trivial Spring Boot Application via CodePipeline and deploying it 
   into the Kubernetes Cluster
 
