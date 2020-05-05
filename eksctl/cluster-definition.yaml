@@ -7,10 +7,21 @@ metadata:
   tags:
     owner: ${OWNER}
 
-nodeGroups:
-- name: ng-1
-  ami: ami-0a9006fb385703b54
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+managedNodeGroups:
+- name: worker-managed-v2
   instanceType: m5.large
   desiredCapacity: 3
+  minSize: 3
+  maxSize: 3
   ssh:
     allow: true
+  labels:
+    infraNode: "true"
+    workerNode: "true"
+  iam:
+    withAddonPolicies:
+      cloudWatch: true
