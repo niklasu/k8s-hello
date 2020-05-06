@@ -1,7 +1,7 @@
-Kubernetes Dashboard 
+Kubernetes Dashboard
 ====================
 
-The files in this directory are used to deploy a [kubernetes dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/) 
+The files in this directory are used to deploy a [kubernetes dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/)
 to your cluster.
 
 Instructions
@@ -12,7 +12,7 @@ Instructions
 ** More details here: https://github.com/kubernetes/dashboard/wiki/Installation
 
 ```
-kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
 ```
 
 * Install heapster (used by dashboard for displaying resource usage)
@@ -46,6 +46,5 @@ kubectl proxy --port=9001
 ```
 
 * Open the dashboard
-on URL `http://localhost:9001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/`
+on URL `http://localhost:9001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
 ** Select _Token_ and paste the _Token_ from above.
-

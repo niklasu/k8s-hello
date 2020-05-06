@@ -2,64 +2,64 @@
 
 A project to:
 
-- Deploy a Kubernetes Cluster in AWS via eksctl. The cluster will have 3 
+- Deploy a Kubernetes Cluster in AWS via eksctl. The cluster will have 3
   worker nodes of AWS instance type "m5.large"
-- Build a trivial Spring Boot Application via CodePipeline and deploying it 
+- Build a trivial Spring Boot Application via CodePipeline and deploying it
   into the Kubernetes Cluster
 
-... for usage as a blueprint for further projects to experiment with AWS on 
+... for usage as a blueprint for further projects to experiment with AWS on
 Kubernetes.
 
-You will need quite some tools installed on your machine to use this project. 
+You will need quite some tools installed on your machine to use this project.
 However most of these should be in your default toolbox for working with AWS and
-Kubernetes anyway, so getting them ready is some effort that needs to be done 
+Kubernetes anyway, so getting them ready is some effort that needs to be done
 in any case when using these technologies.
 
 These tools are:
 
-- A bash-like shell. If you are a Windows user we recommend you install the 
+- A bash-like shell. If you are a Windows user we recommend you install the
   [Linux Subsystem for Windows][bashOnWindows]. Might seem overkill right now,
-  but working with Kubernetes is often tightly coupled to working with Linux, so 
-  we think going this way now might quite save you some nerves further down the line. 
+  but working with Kubernetes is often tightly coupled to working with Linux, so
+  we think going this way now might quite save you some nerves further down the line.
 - [Git CLI][GitCLI]. We are pretty confident you already have it.
-- [eksctl CLI][eksctlCLI], a convenience command 
-  line tool to create EKS clusters, built by Weaveworks. **Ensure you have version 0.1.31 or higher!** 
-- An AWS account with the policy "AdministratorAccess" and its access and 
+- [eksctl CLI][eksctlCLI], a convenience command
+  line tool to create EKS clusters, built by Weaveworks. **Ensure you have version 0.18.0 or higher!**
+- An AWS account with the policy "AdministratorAccess" and its access and
   secret key
-- The [AWS CLI][awsCLI], an Amazon tool to work with 
+- The [AWS CLI][awsCLI], an Amazon tool to work with
   AWS. It must be setup to use the account mentioned above.
-- The [kubectl CLI][kubectlCLI], 
-  the default Kubernetes client in version 1.11 or higher. This is not really 
-  needed for setup but for everything you want to do with this cluster, so we 
+- The [kubectl CLI][kubectlCLI],
+  the default Kubernetes client in version 1.18 or higher. This is not really
+  needed for setup but for everything you want to do with this cluster, so we
   will ensure that it is configured to access it.
 - The [AWS IAM Authenticator][awsIAMAuthenticator].
-  This is a tool that will allow kubectl to login to EKS with Amazon 
-  credentials. You just need to download it and put it somewhere on your PATH. 
+  This is a tool that will allow kubectl to login to EKS with Amazon
+  credentials. You just need to download it and put it somewhere on your PATH.
   You do not need to execute the setup procedure described on the README of
-  the GitHub project. 
-  
-**WARNING:** 
-This deployment will actually cause some costs on your AWS account. These 
-should be kept small (*some* dollars) if you destroy the deployment once you 
-finished working with it. If you keep it running for a longer time you will 
-cause additional time-based costs for using certain resources (Kubernetes 
+  the GitHub project.
+
+**WARNING:**
+This deployment will actually cause some costs on your AWS account. These
+should be kept small (*some* dollars) if you destroy the deployment once you
+finished working with it. If you keep it running for a longer time you will
+cause additional time-based costs for using certain resources (Kubernetes
 Masters, Load Balancers, EC2 instances depending on the instance type you use)
 even if there is no actual traffic on it.
 
 ## Preparations
 
-These are preparations that you only need to do once for this project. Once 
-they are completed you can create and destroy the Kubernetes cluster for this 
+These are preparations that you only need to do once for this project. Once
+they are completed you can create and destroy the Kubernetes cluster for this
 project, like described in the later chapters, as often as desired.
 
 ### Fork (or copy) this repository
 
-For working with this repository we recommend forking it. This will allow you 
+For working with this repository we recommend forking it. This will allow you
 to bind your specific version of the project to your cluster.
 
-Just use the "Fork" button on this repo. Make note of the repo URL of your fork 
-for the next step. Of course you can also just create a copy if you plan to do 
-something completely independent. 
+Just use the "Fork" button on this repo. Make note of the repo URL of your fork
+for the next step. Of course you can also just create a copy if you plan to do
+something completely independent.
 
 ### Checkout your fork/copy of the repository
 
@@ -71,7 +71,7 @@ git clone <your-forks-repo-url>
 
 ### Create a Github access token
 
-For automatically checking out your repo via AWS Code Build your Github account 
+For automatically checking out your repo via AWS Code Build your Github account
 needs an access token.
 
 - Got to URL `https://github.com/settings/tokens/new`
@@ -86,7 +86,7 @@ needs an access token.
 
 ### Preparing environment variables ###
 
-Within the root directory of the project, you will find a file 
+Within the root directory of the project, you will find a file
 `config.template.sh`. Copy this file to to `config.sh` in the same directory. This is its default contents:
 
 ```bash
@@ -109,12 +109,11 @@ The config.sh file will not be checked in with the Git Repo to keep information 
 
 ### Preparing cluster definition file
 
-Also there is a file "eksctl/cluster-definition.yaml". It contains a definition 
-file for your Kubernetes cluster: 
+Also there is a file "eksctl/cluster-definition.yaml". It contains a definition
+file for your Kubernetes cluster:
 
-
-``` 
-apiVersion: eksctl.io/v1alpha4
+```
+apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
@@ -123,14 +122,27 @@ metadata:
   tags:
     owner: ${OWNER}
 
-nodeGroups:
-- name: ng-1
-  ami: ami-0a9006fb385703b54
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+managedNodeGroups:
+- name: worker-managed-v2
   instanceType: m5.large
   desiredCapacity: 3
+  minSize: 3
+  maxSize: 3
   ssh:
     allow: true
+  labels:
+    infraNode: "true"
+    workerNode: "true"
+  iam:
+    withAddonPolicies:
+      cloudWatch: true
 ```
+
+The cluster will be managed from AWS. With managed cluters, AWS takes care of choosing the corresponding AMI that should be installed on the nodes. More details can be found [here](https://eksctl.io/usage/eks-managed-nodes/)
 
 Most of it is configured through aforementioned `config.sh` but you may add your own settings here.
 
@@ -138,7 +150,7 @@ Most of it is configured through aforementioned `config.sh` but you may add your
 
 These parameters influence the build process of your project in AWS.
 
-You find a file "cloudformation/parameters.json" in this repo which, again, is 
+You find a file "cloudformation/parameters.json" in this repo which, again, is
 fed with the environment variables from `config.sh`.
 
 ```
@@ -166,37 +178,37 @@ fed with the environment variables from `config.sh`.
 ]
 ```
 
-Other parameters can be added in the provided syntax. You will need these only 
+Other parameters can be added in the provided syntax. You will need these only
 if you copied (!=forked) the repository to create your own projects:
 
-- GitSourceRepo: Name of the GitHub repository for checkout. 
+- GitSourceRepo: Name of the GitHub repository for checkout.
 - GitBranch: The branch to check out.
-- CodeBuildDockerImage: AWS CodeBuild build image for the build job 
+- CodeBuildDockerImage: AWS CodeBuild build image for the build job
 
 ### Ensure correct region for AWS CLI
- 
-You should ensure that you create the resources in the same AWS region as your 
+
+You should ensure that you create the resources in the same AWS region as your
 cluster has been created. If you kept the default in the cluster definition file
-then it is "eu-west-1" (Ireland). 
+then it is "eu-west-1" (Ireland).
 
 The default region of your client config will be effective. You can review it by:
- 
+
 ```
 aws configure list
 ```
- 
+
 You can set it by:
- 
+
 ```
 aws configure set region eu-west-1
-``` 
- 
+```
+
 ## Deploy the cluster and a sample deployment
 
-All you have to do is to call `./up.sh` in your "bash-like shell". 
+All you have to do is to call `./up.sh` in your "bash-like shell".
 The script deploys the AWS cluster, 3 worker nodes and a sample deployment for you.
 
-To connect to the cluster, you need to update your `~/.kube/config`. This can 
+To connect to the cluster, you need to update your `~/.kube/config`. This can
 be done through
 
 ```
@@ -223,7 +235,7 @@ kubernetes   ClusterIP      10.100.0.1      <none>                              
 
 ```
 
-Accessing the `EXTERNAL-IP` of the `LoadBalancer` in a browser should show the 
+Accessing the `EXTERNAL-IP` of the `LoadBalancer` in a browser should show the
 following (or a similar) result:
 ```
 Hi (0, k8s-hello-786cdcbc88-zqwf5)
@@ -231,19 +243,19 @@ Hi (0, k8s-hello-786cdcbc88-zqwf5)
 
 ## Additional features
 
-You can deploy a Kubernetes dashboard by following the README instructions in 
+You can deploy a Kubernetes dashboard by following the README instructions in
 subdir "dashboard" of this repo.
 
 ## Clean up
 
 As with deployment, shutdown is done through a bash script `down.sh`, that removes
-the resources that were created (including the kubernetes-deployment, worker nodes, and the 
+the resources that were created (including the kubernetes-deployment, worker nodes, and the
 cluster itself).
 
-Please pay close attention to any error messages during shutdown to catch 
+Please pay close attention to any error messages during shutdown to catch
 potentially undeleted resources.
 
-[GitCLI]: https://git-scm.com/ 
+[GitCLI]: https://git-scm.com/
 [eksctlCLI]: https://github.com/weaveworks/eksctl
 [awsCLI]: https://aws.amazon.com/de/cli/
 [kubectlCLI]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
