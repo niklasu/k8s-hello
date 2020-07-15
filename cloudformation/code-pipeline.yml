@@ -124,11 +124,6 @@ Resources:
             Action:
             - codebuild:StartBuild
             - codebuild:BatchGetBuilds
-            - codecommit:GetBranch
-            - codecommit:GetCommit
-            - codecommit:UploadArchive
-            - codecommit:GetUploadArchiveStatus
-            - codecommit:CancelUploadArchive
             - iam:PassRole
           - Resource: !Sub arn:aws:s3:::${CodePipelineArtifactBucket}/*
             Effect: Allow
